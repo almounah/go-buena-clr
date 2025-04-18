@@ -5,6 +5,7 @@ import (
 	"syscall"
 	"unsafe"
 
+
 	"golang.org/x/sys/windows"
 )
 
@@ -43,6 +44,7 @@ func LoadGoodClr(runtime string, NetBytes []byte) (*ICORRuntimeHost, []uint16, e
 	identityBufferSize := uint32(4096)
 	syscall.SyscallN(pIdentityManager.VTable.GetBindingIdentityFromStream, uintptr(unsafe.Pointer(pIdentityManager)), uintptr(unsafe.Pointer(assemblyStream)), uintptr(0), uintptr(unsafe.Pointer(&identityBuffer[0])), uintptr(unsafe.Pointer(&identityBufferSize)))
 
+	fmt.Println(fmt.Sprintf("[+] GetBindingIdentityFromStream: %s", syscall.UTF16ToString(identityBuffer)))
 
     // Create a Target Assembly and bind it to our Host
     var tgtAssembly *TargetAssembly = &TargetAssembly{}
@@ -51,6 +53,7 @@ func LoadGoodClr(runtime string, NetBytes []byte) (*ICORRuntimeHost, []uint16, e
     tgtAssembly.AssemblyBytes = &NetBytes[0]
     tgtAssembly.AssemblySize = uint32(len(NetBytes))
 
+    fmt.Println("[?] Printing TargetAssembly otherwise it dies because of Go GC", tgtAssembly)
 
     // Create Memory Manager
     // memManger := GetMemoryManager()
@@ -80,7 +83,7 @@ func Load2Assembly(runtimeHost *ICORRuntimeHost, identityString []uint16) (*Asse
 		return nil
 	}
 
-    // Patchin System Exit If you want to patch System Exit
+    // Patchin System Exit
     //PatchSysExit(appDomain)
 
     var assembly *Assembly 
@@ -89,9 +92,6 @@ func Load2Assembly(runtimeHost *ICORRuntimeHost, identityString []uint16) (*Asse
 	return assembly
 }
 
-
-
-// Because Why not ...
 func PatchSysExit(appDomain *AppDomain) {
     mscorlib, err := appDomain.Load_2("mscorlib, Version=4.0.0.0")
     if err != nil {
@@ -101,24 +101,28 @@ func PatchSysExit(appDomain *AppDomain) {
     // Get The Exit Class
     var exitClass *SystemType
     s1, _ := SysAllocString("System.Environment")
-    syscall.SyscallN(mscorlib.vtbl.GetType_2, uintptr(unsafe.Pointer(mscorlib)), uintptr(s1), uintptr(unsafe.Pointer(&exitClass)))
+    hr, _, e := syscall.SyscallN(mscorlib.vtbl.GetType_2, uintptr(unsafe.Pointer(mscorlib)), uintptr(s1), uintptr(unsafe.Pointer(&exitClass)))
+    fmt.Println(fmt.Sprintf("[+] Done Syscall GetType ---> %X, %s", hr, e))
 
     // Get The Exit Method
     var exitInfo *MethodInfo
     s2, _ := SysAllocString("Exit")
     exitFlags := 16 | 8
-    syscall.SyscallN(exitClass.vtbl.GetMethod_2, uintptr(unsafe.Pointer(exitClass)), uintptr(s2), uintptr(exitFlags), uintptr(unsafe.Pointer(&exitInfo)))
+    hr, _, e = syscall.SyscallN(exitClass.vtbl.GetMethod_2, uintptr(unsafe.Pointer(exitClass)), uintptr(s2), uintptr(exitFlags), uintptr(unsafe.Pointer(&exitInfo)))
+    fmt.Println(fmt.Sprintf("[+] Done Syscall ExitClass.GetMethod_2 ---> %X, %s", hr, e))
 
     // Getting methodInfoClass
     var methodInfoClass *SystemType
     s3, _ := SysAllocString("System.Reflection.MethodInfo")
-    syscall.SyscallN(mscorlib.vtbl.GetType_2, uintptr(unsafe.Pointer(mscorlib)), uintptr(s3), uintptr(unsafe.Pointer(&methodInfoClass)))
+    hr, _, e = syscall.SyscallN(mscorlib.vtbl.GetType_2, uintptr(unsafe.Pointer(mscorlib)), uintptr(s3), uintptr(unsafe.Pointer(&methodInfoClass)))
+    fmt.Println(fmt.Sprintf("[+] Done Syscall GetType methodInfoClass ---> %X, %s", hr, e))
 
     // Get Property Info
     var methodHandleProp *PropertyInfo
     s4, _ := SysAllocString("MethodHandle")
     methodHandleFlags := 4 | 16
-    syscall.SyscallN(methodInfoClass.vtbl.GetProperty, uintptr(unsafe.Pointer(methodInfoClass)), uintptr(s4), uintptr(methodHandleFlags), uintptr(unsafe.Pointer(&methodHandleProp)))
+    hr, _, e = syscall.SyscallN(methodInfoClass.vtbl.GetProperty, uintptr(unsafe.Pointer(methodInfoClass)), uintptr(s4), uintptr(methodHandleFlags), uintptr(unsafe.Pointer(&methodHandleProp)))
+    fmt.Println(fmt.Sprintf("[+] Done Syscall GetProperty ---> %X, %s", hr, e))
 
     // Some Stuff With Variant
     var methodHandlePtr Variant
@@ -130,24 +134,28 @@ func PatchSysExit(appDomain *AppDomain) {
         fmt.Println("Suspicious correct")
     }
     methodHandleVal := Variant{}
-    syscall.SyscallN(methodHandleProp.Vtlb.GetValue, uintptr(unsafe.Pointer(methodHandleProp)), uintptr(unsafe.Pointer(&methodHandlePtr)), uintptr(unsafe.Pointer(methodHandleArgs)), uintptr(unsafe.Pointer(&methodHandleVal)))
+    hr, _, e = syscall.SyscallN(methodHandleProp.Vtlb.GetValue, uintptr(unsafe.Pointer(methodHandleProp)), uintptr(unsafe.Pointer(&methodHandlePtr)), uintptr(unsafe.Pointer(methodHandleArgs)), uintptr(unsafe.Pointer(&methodHandleVal)))
+    fmt.Println(fmt.Sprintf("[+] Done Syscall GetValue ---> %X, %s", hr, e))
 
     // Get GetFunctionPointer function
     var rtMethodHandleType *SystemType
     s5, _ := SysAllocString("System.RuntimeMethodHandle")
-    syscall.SyscallN(mscorlib.vtbl.GetType_2, uintptr(unsafe.Pointer(mscorlib)), uintptr(s5), uintptr(unsafe.Pointer(&rtMethodHandleType)))
+    hr, _, e = syscall.SyscallN(mscorlib.vtbl.GetType_2, uintptr(unsafe.Pointer(mscorlib)), uintptr(s5), uintptr(unsafe.Pointer(&rtMethodHandleType)))
+    fmt.Println(fmt.Sprintf("[+] Done Syscall GetType ---> %X, %s", hr, e))
 
     var getFuncPtrMethodInfo *MethodInfo
     s2, _ = SysAllocString("GetFunctionPointer")
     getFuncPtrFlags := 4 | 16
-    syscall.SyscallN(rtMethodHandleType.vtbl.GetMethod_2, uintptr(unsafe.Pointer(rtMethodHandleType)), uintptr(s2), uintptr(getFuncPtrFlags), uintptr(unsafe.Pointer(&getFuncPtrMethodInfo)))
+    hr, _, e = syscall.SyscallN(rtMethodHandleType.vtbl.GetMethod_2, uintptr(unsafe.Pointer(rtMethodHandleType)), uintptr(s2), uintptr(getFuncPtrFlags), uintptr(unsafe.Pointer(&getFuncPtrMethodInfo)))
+    fmt.Println(fmt.Sprintf("[+] Done Syscall ExitClass.GetMethod_2 ---> %X, %s", hr, e))
 
     getFuncPtrArgs, err := SafeArrayCreate(0, 0, nil)
     if err != nil {
         fmt.Println("Suspicious correct")
     }
     exitPtr := Variant{}
-    syscall.SyscallN(getFuncPtrMethodInfo.vtbl.Invoke_3, uintptr(unsafe.Pointer(getFuncPtrMethodInfo)), uintptr(unsafe.Pointer(&methodHandleVal)), uintptr(unsafe.Pointer(getFuncPtrArgs)), uintptr(unsafe.Pointer(&exitPtr)))
+    hr, _, e = syscall.SyscallN(getFuncPtrMethodInfo.vtbl.Invoke_3, uintptr(unsafe.Pointer(getFuncPtrMethodInfo)), uintptr(unsafe.Pointer(&methodHandleVal)), uintptr(unsafe.Pointer(getFuncPtrArgs)), uintptr(unsafe.Pointer(&exitPtr)))
+    fmt.Println(fmt.Sprintf("[+] Done Syscall GetValue ---> %X, %s", hr, e))
 
     addr := exitPtr.Val
     fmt.Println(exitPtr)

@@ -1,6 +1,7 @@
 package clr
 
 import (
+	"fmt"
 	"syscall"
 	"unsafe"
 
@@ -77,22 +78,26 @@ func MemoryManager_CreateMalloc(this *MyMemoryManager, dwMallocType uint32, ppMa
 func MemoryManager_VirtualAlloc(this *MyMemoryManager, pAddress uintptr, dwSize uintptr, flAllocationType uint32, flProtect uint32, eCriticalLevel uint32, ppMem **uintptr) uintptr {
 	allcAddr, _ := windows.VirtualAlloc(pAddress, dwSize, flAllocationType, flProtect)
 	*ppMem = (*uintptr)(unsafe.Pointer(allcAddr))
+    fmt.Println("Called VirtualAlloc")
 	return S_OK
 }
 
 func MemoryManager_VirtualFree(this *MyMemoryManager, lpAddress uintptr, dwSize uintptr, dwFreeType uint32) uintptr {
 	windows.VirtualFree(lpAddress, dwSize, dwFreeType)
+    fmt.Println("Called VirtualFree")
 	return S_OK
 }
 
 func MemoryManager_VirtualQuery(this *MyMemoryManager, lpAddress uintptr, lpBuffer *uintptr, dwLength uintptr, pResult *uintptr) uintptr {
 	r1, _, _ := syscall.SyscallN(windows.NewLazyDLL("kernel32.dll").NewProc("VirtualQuery").Addr(), lpAddress, uintptr(unsafe.Pointer(lpBuffer)), uintptr(dwLength))
 	*pResult = r1
+    fmt.Println("Called VirtualQuery")
 	return S_OK
 }
 
 func MemoryManager_VirtualProtect(this *MyMemoryManager, lpAddress uintptr, dwSize uintptr, flNewProtect uint32, pOldProtect *uint32) uintptr {
 	windows.VirtualProtect(lpAddress, dwSize, flNewProtect, pOldProtect)
+    fmt.Println("Called VirtualProtect")
 	return S_OK
 }
 
@@ -119,6 +124,7 @@ func MemoryManager_AcquiredVirtualAddressSpace(this *MyMemoryManager, startAddre
     (PSLIST_ENTRY)(unsafe.Pointer(allocEntry)).Next = (PSLIST_ENTRY)(unsafe.Pointer(this.MemAllocList)).Next
     (PSLIST_ENTRY)(unsafe.Pointer(this.MemAllocList)).Next = (PSLIST_ENTRY)(unsafe.Pointer(allocEntry))
 
+    fmt.Println("Called VirtualProtect")
 
     return S_OK
 }

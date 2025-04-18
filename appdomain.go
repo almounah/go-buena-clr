@@ -211,7 +211,6 @@ func (obj *AppDomain) ToString() (domain string, err error) {
 	return
 }
 
-// Adding Load_2 Here
 func (obj *AppDomain) Load_2(identityString string) (assembly *Assembly, err error) {
     BStrIdentityString, err := SysAllocString(identityString)
     if err != nil {
@@ -224,13 +223,11 @@ func (obj *AppDomain) Load_2(identityString string) (assembly *Assembly, err err
 		uintptr(unsafe.Pointer(&assembly)),
 	)
 
-	//fmt.Println(fmt.Sprintf("the appdomain.Load_2 function HRESULT: 0x%x, %s", hr, err))
 	if err != syscall.Errno(0) {
 		if err != syscall.Errno(1150) {
 			return
 		}
 	}
-	//fmt.Println(fmt.Sprintf("the appdomain.Load_2 function HRESULT: 0x%x, %s", hr, err))
 
 	if hr != S_OK {
 		err = fmt.Errorf("the appdomain.Load_2 function returned a non-zero HRESULT: 0x%x", hr)

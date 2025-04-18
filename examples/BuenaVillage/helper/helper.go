@@ -29,7 +29,7 @@ func main()  {
         encryptedShellcode = append(encryptedShellcode, clearShellcodeByte[i] ^ key )
     }
 
-    filename := shellcodePath + ".enc"
+    filename := "file.enc"
 
 	err = os.WriteFile(filename, encryptedShellcode, 0644)
 	if err != nil {

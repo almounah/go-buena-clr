@@ -6,16 +6,16 @@ package main
 import (
 	_ "embed"
 	"fmt"
-	clr "github.com/almounah/go-buena-clr"
+	"os"
 
+	clr "github.com/almounah/go-buena-clr"
 )
 
 //go:embed file.enc
 var testNetCipher []byte
 
 func main() {
-	var params []string
-	params = []string{"triage"}
+    params := os.Args[1:]
 
 	var testNet []byte
 
@@ -31,6 +31,4 @@ func main() {
 	clr.InvokeAssembly(pMethodInfo, params)
 
 	fmt.Println("Done Executing ......................")
-	var enter string
-	fmt.Scanln(&enter)
 }

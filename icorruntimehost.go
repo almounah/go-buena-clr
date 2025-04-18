@@ -91,11 +91,9 @@ func (obj *ICORRuntimeHost) QueryInterface(riid windows.GUID, ppvObject unsafe.P
 		uintptr(ppvObject),
 	)
 	if err != syscall.Errno(0) {
-		fmt.Println("1111111111111")
 		return fmt.Errorf("the IUknown::QueryInterface method returned an error:\r\n%s", err)
 	}
 	if hr != S_OK {
-		fmt.Println("222222222222222222")
 		return fmt.Errorf("the IUknown::QueryInterface method method returned a non-zero HRESULT: 0x%x", hr)
 	}
 	return nil

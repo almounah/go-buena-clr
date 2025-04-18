@@ -108,8 +108,8 @@ func GlobalFree(p uintptr) {
 
 func GlobalAlloc(p uintptr) {
     modKernel32   := windows.NewLazyDLL("kernel32.dll")
-    procGlobalAlloc := modKernel32.NewProc("GlobalFree")
-    procGlobalAlloc.Call(p)
+    procGlobalFree := modKernel32.NewProc("GlobalFree")
+    procGlobalFree.Call(p)
 }
 
 func HResultFromWin32(x uint32) uint32 {
@@ -133,8 +133,8 @@ func SHCreateMemStream(assemByte *byte, assemSize uint32) *IStream{
 
 func HeapCreate(flag uintptr) uintptr {
     modKernel32   := windows.NewLazyDLL("kernel32.dll")
-    procHeapFree := modKernel32.NewProc("HeapCreate")
-    res, _, _ := procHeapFree.Call(flag, 0, 0)
+    procGlobalFree := modKernel32.NewProc("HeapCreate")
+    res, _, _ := procGlobalFree.Call(flag, 0, 0)
     return res
 }
 

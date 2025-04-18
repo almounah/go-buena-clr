@@ -1,5 +1,5 @@
-github.com/Ne0nd0g/go-clr v1.0.3 h1:xt92wwuqY23ZSC7RuHD3mKu3K22Bk5NNbxI803vojK4=
-github.com/Ne0nd0g/go-clr v1.0.3/go.mod h1:TKYSQ/5xT25EvBUttAlUrzpR8yHuI0qTRK495I5xG/I=
+github.com/almounah/go-buena-clr v0.0.0-20250418180543-b39f490f3ee2 h1:98typ7lzI1wTXbVazR8HPQBpzKTiMMOFI5wCjLx1wzY=
+github.com/almounah/go-buena-clr v0.0.0-20250418180543-b39f490f3ee2/go.mod h1:lcwgPOgv3fPid1cHqR2/R+dX7/++sdO5hNYZIkJseZM=
 golang.org/x/sys v0.0.0-20220330033206-e17cdc41300f h1:rlezHXNlxYWvBCzNses9Dlc7nGFaNMJeqLolcmQSSZY=
 golang.org/x/sys v0.0.0-20220330033206-e17cdc41300f/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/text v0.3.7 h1:olpwvP2KacW1ZWvsR7uQhoyTYvKAupfQrRGBFM352Gk=

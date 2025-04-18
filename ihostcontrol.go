@@ -93,5 +93,6 @@ func GetNewCustomIHostControl() MyHostControl {
 	res.PVtbl = &vtable
 	res.Count = 0
 
+
 	return res
 }
