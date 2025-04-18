@@ -231,7 +231,6 @@ func LoadCLR(targetRuntime string) (runtimeHost *ICORRuntimeHost, err error) {
 	for _, r := range runtimes {
 		if strings.Contains(r, targetRuntime) {
 			latestRuntime = r
-			break
 		} else {
 			latestRuntime = r
 		}

@@ -19,4 +19,6 @@ const (
 	E_POINTER uint32 = 0x80004003
 	// E_NOINTERFACE No such interface supported
 	E_NOINTERFACE uint32 = 0x80004002
+    // Not Implemented
+    E_NOTIMPL uint32 = 0x80004001
 )

@@ -1,4 +1,4 @@
-module github.com/Ne0nd0g/go-clr
+module github.com/almounah/go-buena-clr
 
 go 1.13
 

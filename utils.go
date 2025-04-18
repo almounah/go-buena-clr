@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package clr
@@ -9,6 +10,7 @@ import (
 	"unicode/utf16"
 	"unsafe"
 
+	"golang.org/x/sys/windows"
 	"golang.org/x/text/encoding/unicode"
 	"golang.org/x/text/transform"
 )
@@ -97,3 +99,42 @@ func PrepareParameters(params []string) (*SafeArray, error) {
 	}
 	return paramsSafeArrayPtr, nil
 }
+
+func GlobalFree(p uintptr) {
+    modKernel32   := windows.NewLazyDLL("kernel32.dll")
+    procGlobalFree := modKernel32.NewProc("GlobalFree")
+    procGlobalFree.Call(p)
+}
+
+func GlobalAlloc(p uintptr) {
+    modKernel32   := windows.NewLazyDLL("kernel32.dll")
+    procGlobalAlloc := modKernel32.NewProc("GlobalFree")
+    procGlobalAlloc.Call(p)
+}
+
+func HResultFromWin32(x uint32) uint32 {
+	if x <= 0 {
+		return x
+	}
+	return (x & 0x0000FFFF) | (7 << 16) | 0x80000000
+}
+
+func SHCreateMemStream(assemByte *byte, assemSize uint32) *IStream{
+    modKernel32   := windows.NewLazyDLL("shlwapi.dll")
+    procCreateMemStream := modKernel32.NewProc("SHCreateMemStream")
+    r, _, err := procCreateMemStream.Call(uintptr(unsafe.Pointer(assemByte)), uintptr(assemSize))
+    if r == 0 {
+        fmt.Println("Error in SHCreateMemStream ", r)
+        fmt.Println(err)
+    }
+    return (*IStream)(unsafe.Pointer(r))
+}
+
+
+func HeapCreate(flag uintptr) uintptr {
+    modKernel32   := windows.NewLazyDLL("kernel32.dll")
+    procHeapFree := modKernel32.NewProc("HeapCreate")
+    res, _, _ := procHeapFree.Call(flag, 0, 0)
+    return res
+}
+
